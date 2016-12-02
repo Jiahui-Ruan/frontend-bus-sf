@@ -1,0 +1,36 @@
+.mesh 
+{
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.streets {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arteries {
+  fill: none;
+  stroke: #000080;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.freeways {
+  fill: none;
+  stroke: #00FF7F;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.feature {
+  fill: #ccc;
+  cursor: pointer;
+}
+#reset_all_btn {
+  background-color: white;
+  border-radius: 5px;
+}
+body { 
+  background: lightblue; 
+}
