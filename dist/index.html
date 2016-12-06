@@ -12,15 +12,22 @@
         <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
         <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
         <script src="https://d3js.org/d3-timer.v1.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
     </head>
     <body>
-        <button id="reset_all_btn">Reset All</button>
         <div class="container-fluid">
-            <div class="col-md-8 col-xs-8" id="map"></div>
-            <div class="col-md-4 col-xs-4" id="button_div"></div>
-        </div>
+            <div class="col-md-8 col-xs-8">
+                <div class="row"><h3>Welcome to SF-muni realtime location website</h3></div>
+                <div class="row" id="map"></div>
+            </div>
+            <div class="col-md-4 col-xs-4">
+                <div class="row" ><button id="reset_all_btn">Reset All</button></div>
+                <div class="row" id="button_div"></div>
+                <div class="row" id="prediction_div"></div>
+            </div>
+        </div>   
 
-    </body>
     <script type="text/javascript" src="js/d3.js"></script>
+    
+    </body>
+    
 </html>

@@ -1,14 +1,15 @@
+      "use strict";
       //display polygon
-      var width = 700,
+      const width = 700,
       height = 700;
 
       //start unit projection
-      var projection = d3.geo.albers();
+      const projection = d3.geo.albers();
 
-      var path = d3.geo.path()
+      const path = d3.geo.path()
           .projection(projection);
 
-      var svg = d3.select("#map").append("svg")
+      const svg = d3.select("#map").append("svg")
           .attr("width", width)
           .attr("height", height);
 
@@ -16,16 +17,16 @@
           if (error) return console.error(error);
           //console.log(sf)
 
-          var neighborhoods = topojson.feature(sf, sf.objects.neighborhoods)
-          var arteries = topojson.feature(sf, sf.objects.arteries)
-          var freeways = topojson.feature(sf, sf.objects.freeways)
-          var streets = topojson.feature(sf, sf.objects.streets)
+          const neighborhoods = topojson.feature(sf, sf.objects.neighborhoods)
+          const arteries = topojson.feature(sf, sf.objects.arteries)
+          const freeways = topojson.feature(sf, sf.objects.freeways)
+          const streets = topojson.feature(sf, sf.objects.streets)
 
           projection
                 .scale(1)
                 .translate([0, 0]);
 
-          var b = path.bounds(neighborhoods),
+          const b = path.bounds(neighborhoods),
               s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
               t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
@@ -47,18 +48,8 @@
                 .datum(streets)
                 .attr("class", "streets")
                 .attr("d", path); 
-          //draw arteries
-          // svg.append("path")
-          //       .datum(arteries)
-          //       .attr("class", "arteries")
-          //       .attr("d", path);
-          //draw freeways
-          // svg.append("path")
-          //       .datum(freeways)
-          //       .attr("class", "freeways")
-          //       .attr("d", path); 
           //define a pattern
-          var defs = svg.append('svg:defs');
+          const defs = svg.append('svg:defs');
           defs.append("svg:pattern")
                 .attr("id", "bus_pattern")
                 .attr("width", 20)
@@ -70,9 +61,45 @@
                 .attr("x", 0)
                 .attr("y", 0);
           //create a group for all the selected bus
-          var allBusGroup = svg.append("svg:g")
+          const allBusGroup = svg.append("svg:g")
           //create an object to maintain all inveral
-          var inveralObj = {}
+          const inveralObj = {}
+          //make table function
+          function tabulate(data, columns, chosen_route, dir) {
+            const table = d3.select('#prediction_div').append('table').attr("class", chosen_route);
+            const caption = table.append('caption');
+            const thead = table.append('thead');
+            const tbody = table.append('tbody');
+            
+            // caption for the table
+            caption.html(dir)
+
+            // append the header row
+            thead.append('tr')
+              .selectAll('th')
+              .data(columns).enter()
+              .append('th')
+                .text(function (column) { return column; })
+
+            // create a row for each object in the data
+            const rows = tbody.selectAll('tr')
+                            .data(data)
+                            .enter()
+                            .append('tr');
+
+            // create a cell in each row for each column
+            const cells = rows.selectAll('td')
+                            .data(function (row) {
+                              return columns.map(function (column) {
+                                return {column: column, value: row[column]};
+                              });
+                            })
+                            .enter()
+                            .append('td')
+                              .text(function (d) { return d.value; });
+
+             return table;
+          }
           //search all route
           const routeUrl = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=sf-muni"
           d3.xml(routeUrl, function(error, routeData){
@@ -95,23 +122,27 @@
               .attr("id", function(d){return "btn"+d})
               .style("background-color", "white")
               .style("border-radius", 5+"px")
-              .attr("value", function (all_routes){return all_routes;} )
+              .attr("value", function (this_routes){return this_routes;} )
               .on("click", function(chosen_route){
                   //create a toggle method
-                  var chosen = allBusGroup.select(`#route${chosen_route}`)[0][0]
+                  const chosen = allBusGroup.select(`#route${chosen_route}`)[0][0]
                   if (chosen) {
                     chosen.remove();
+                    //clear table
+                    Array.from(document.getElementsByClassName(`${chosen_route}`)).forEach(function(item){
+                                  item.remove();
+                                })
                     //return btn to normal
                     d3.select(`#btn${chosen_route}`)
                       .style("background-color", "white")
                       .style("border-radius", 5+"px")
                     //clear invertal of this route
                     clearInterval(inveralObj[`route${chosen_route}`])
-                    //console.log(inveralObj)
+                    
                   } else {
-                      var drawBus = function() {
+                      const drawBus = function() {
 
-                        var sglBusGroup = allBusGroup.append("svg:g")
+                        const sglBusGroup = allBusGroup.append("svg:g")
                                                       .attr("id", "route"+chosen_route)
 
                         const locUrl = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&t=0&r="+chosen_route;
@@ -119,9 +150,9 @@
                         
                         d3.xml(cfgUrl, function(error, cfgData){
 
-                            cfgData = [].map.call(cfgData.querySelectorAll("route"), function(route) {
-                              
-                              const color = route.getAttribute("color")
+                            cfgData.querySelectorAll("route").forEach(function(route) {
+
+                              const color = route.getAttribute("color");
                               
                               //change color for btn
                               d3.select(`#btn${chosen_route}`)
@@ -129,7 +160,7 @@
 
                               d3.xml(locUrl, function(error, locData){
 
-                                  locData = [].map.call(locData.querySelectorAll("vehicle"), function(vehicle) {
+                                  locData.querySelectorAll("vehicle").forEach(function(vehicle) {
                                     
                                     const lon = vehicle.getAttribute("lon")
                                     const lat = vehicle.getAttribute("lat")
@@ -141,19 +172,66 @@
                                         .style("stroke-width", 3)
                                         .attr("transform", function() {return "translate(" + projection([lon, lat]) + ")";});
                                   })
-                              })
+                              });
 
+                              //build route path
+                              route.querySelectorAll("path").forEach(function(path) {
+
+                                path.querySelectorAll("point").forEach(function(point) {
+                                  const pathLon = point.getAttribute("lon")
+                                  const pathLat = point.getAttribute("lat")
+                                  sglBusGroup.append("circle")
+                                        .attr("r", 1.5)
+                                        .style("fill", color)
+                                        .attr("transform", function() {return "translate(" + projection([pathLon, pathLat]) + ")";});
+                                })
+                              });
+                              //create stop info
+                              route.querySelectorAll("direction").forEach(function(direction) {
+                                //timetable array for each direction
+                                const timetableArr = new Array();
+
+                                const dir = direction.getAttribute("title");
+                                const stopSum = direction.querySelectorAll("stop").length;
+
+                                direction.querySelectorAll("stop").forEach(function(stop) {
+                                  const stopTag = stop.getAttribute("tag");
+                                  const stopUrl = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictionsForMultiStops&a=sf-muni&stops="+chosen_route+"|"+stopTag;
+                                  
+                                  d3.xml(stopUrl, function(err, stopData){
+
+                                    stopData.querySelectorAll("predictions").forEach(function(predictions) {
+                                      const timetableObj = new Object();
+                                      timetableObj["StopTitle"] = predictions.getAttribute("stopTitle");
+                                      if(predictions.querySelector("prediction:first-child") === null) {
+                                        timetableObj["Time"] = "no data"
+                                      }
+                                      else{
+                                        timetableObj["Time"] = predictions.querySelector("prediction:first-child").getAttribute("minutes");
+                                      }
+                                      timetableArr.push(timetableObj);                                      
+                                    })
+                                    if (timetableArr.length === stopSum) {
+                                      tabulate(timetableArr, ["StopTitle", "Time"], chosen_route, dir);
+                                    }
+                                  })
+                                })
+                                //can not create a table here, since d3.xml is an AJAX call
+                              })
                             })
                         })
                       }
                       //immediately draw
                       drawBus();
                       //use obj to maintain the inverals of different bus
-                      inveralObj[`route${chosen_route}`] = setInterval(function() {
+                      inveralObj[`route${chosen_route}`]  = setInterval(function() {
                                 allBusGroup.select(`#route${chosen_route}`)[0][0].remove();
+                                //ES6 convert an array-like structure to an actual array.
+                                Array.from(document.getElementsByClassName(`${chosen_route}`)).forEach(function(item){
+                                  item.remove();
+                                })
                                 drawBus(); 
-                      }, 15000)                              
-                      //console.log(inveralObj)
+                      }, 15000)
                   }
                 })
             })
@@ -162,11 +240,13 @@
           d3.select("#reset_all_btn")
             .on("click", function() {
               //clear all intervals
-              for(var key in inveralObj) {
+              for(const key in inveralObj) {
                 clearInterval(inveralObj[key]);
               }
               //delete all bus in the map
               allBusGroup.selectAll("*").remove();
+              //delete all tables in the map
+              d3.selectAll("table").remove();
               //reset the button
               d3.selectAll(".button")
                 .style("background-color", "white")
