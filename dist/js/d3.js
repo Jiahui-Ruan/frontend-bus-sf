@@ -164,13 +164,21 @@
                                     
                                     const lon = vehicle.getAttribute("lon")
                                     const lat = vehicle.getAttribute("lat")
+                                    const heading = vehicle.getAttribute("heading");
+                                    const arc = heading * (Math.PI / 180);
+                                    const newLon = (parseFloat(lon) + 0.001 * Math.sin(arc)).toString();
+                                    const newLat = (parseFloat(lat) + 0.001 * Math.cos(arc)).toString();
+                                    console.log(lon, newLon,typeof(newLon));
                                     //draw
                                     sglBusGroup.append("circle")
                                         .attr("r", 10)
                                         .style("fill", "url(#bus_pattern)")
                                         .style("stroke", color)
                                         .style("stroke-width", 3)
-                                        .attr("transform", function() {return "translate(" + projection([lon, lat]) + ")";});
+                                        .attr("transform", function() {return "translate(" + projection([lon, lat]) + ")";})
+                                        .transition()
+                                        .duration(15000)
+                                        .attr("transform", function() {return "translate(" + projection([newLon, newLat]) + ")";});
                                   })
                               });
 
